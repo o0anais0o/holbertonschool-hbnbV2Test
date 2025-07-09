@@ -9,6 +9,13 @@ login_model = api.model('Login', {
     'password': fields.String(required=True)
 })
 
+def login_user(email, password):
+    # Ici, ta logique pour vérifier l'utilisateur et retourner un token
+    # Pour le test, tu peux juste retourner une chaîne bidon
+    if email == "test@example.com" and password == "test":
+        return "fake-jwt-token"
+    return None
+
 @api.route('/login')
 class Login(Resource):
     @api.expect(login_model, validate=True)
