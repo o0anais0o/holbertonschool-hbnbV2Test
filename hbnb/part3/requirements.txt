@@ -1,5 +1,5 @@
-Flask
-Flask-SQLAlchemy
-flask-bcrypt
-flask-jwt-extended
+flask
 flask-restx
+flask-sqlalchemy
+flask-jwt-extended
+werkzeug

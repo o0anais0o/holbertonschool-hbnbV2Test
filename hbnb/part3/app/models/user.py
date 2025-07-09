@@ -1,30 +1,34 @@
-from app import db, bcrypt
-from .basemodel import BaseModel
+from app import db
+from app.models.base_model import BaseModel
+from werkzeug.security import generate_password_hash, check_password_hash
+import re
 
 class User(BaseModel):
     __tablename__ = 'users'
-
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    places = db.relationship('Place', backref='owner', lazy=True, cascade="all, delete-orphan")
-    reviews = db.relationship('Review', backref='author', lazy=True, cascade="all, delete-orphan")
 
-    def hash_password(self, password):
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+    places = db.relationship('Place', backref='owner', lazy=True)
+    reviews = db.relationship('Review', backref='user', lazy=True)
 
-    def verify_password(self, password):
-        return bcrypt.check_password_hash(self.password, password)
+    EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
-            "email": self.email,
-            "is_admin": self.is_admin,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None
-        }
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def validate_data(data):
+        if not data.get('first_name') or len(data['first_name']) > 50:
+            raise ValueError("first_name is required and must be <= 50 chars")
+        if not data.get('last_name') or len(data['last_name']) > 50:
+            raise ValueError("last_name is required and must be <= 50 chars")
+        if not data.get('email') or not User.EMAIL_REGEX.match(data['email']):
+            raise ValueError("Valid email is required")
+        if not data.get('password') or len(data['password']) < 6:
+            raise ValueError("Password is required and must be >= 6 chars")
