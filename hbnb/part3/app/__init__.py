@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_restx import Api
-from app.extensions import db, jwt  # ou selon ta structure
+from app.extensions import db, jwt
 
 from app.api.v1.amenities import api as amenities_ns
 from app.api.v1.users import api as users_ns
