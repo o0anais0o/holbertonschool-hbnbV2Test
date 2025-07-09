@@ -1,0 +1,84 @@
+import pytest
+from app import create_app, db
+from app.models.user import User
+from app.models.amenity import Amenity
+
+@pytest.fixture
+def client():
+    app = create_app('testing')
+    app.config['TESTING'] = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['JWT_SECRET_KEY'] = 'test'
+    with app.test_client() as client:
+        with app.app_context():
+            db.create_all()
+            # Création d'un user pour owner
+            user = User(first_name='Alice', last_name='Doe', email='alice@example.com')
+            user.set_password('password')
+            db.session.add(user)
+            db.session.commit()
+            # Création d'une amenity
+            amenity = Amenity(name='Wifi')
+            db.session.add(amenity)
+            db.session.commit()
+        yield client
+        with app.app_context():
+            db.drop_all()
+
+def get_auth_token(client):
+    # Crée l'utilisateur s'il n'existe pas déjà
+    client.post('/api/v1/users/', json={
+        'first_name': 'Alice',
+        'last_name': 'Doe',
+        'email': 'alice@example.com',
+        'password': 'password'
+    })
+    resp = client.post('/api/v1/auth/login', json={
+        'email': 'alice@example.com',
+        'password': 'password'
+    })
+    return resp.get_json()['access_token']
+
+def test_create_place(client):
+    token = get_auth_token(client)
+    # Récupère l'id du user et de l'amenity
+    with client.application.app_context():
+        user = User.query.filter_by(email='alice@example.com').first()
+        amenity = Amenity.query.filter_by(name='Wifi').first()
+        owner_id = user.id
+        amenity_id = amenity.id
+
+    payload = {
+        'title': 'Super appart',
+        'description': 'Très bien situé',
+        'price': 120.0,
+        'latitude': 48.8566,
+        'longitude': 2.3522,
+        'owner_id': owner_id,
+        'amenities': [amenity_id]
+    }
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client.post('/api/v1/places/', json=payload, headers=headers)
+    assert resp.status_code == 201
+    data = resp.get_json()
+    assert data['title'] == 'Super appart'
+    assert data['owner']['id'] == owner_id
+
+def test_get_places(client):
+    resp = client.get('/api/v1/places/')
+    assert resp.status_code == 200
+    # Peut être vide au début, c'est normal
+
+def test_create_place_missing_field(client):
+    token = get_auth_token(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    payload = {
+        'title': 'Sans prix',
+        # 'price' manquant
+        'latitude': 48.0,
+        'longitude': 2.0,
+        'owner_id': 'dummy',
+        'amenities': []
+    }
+    resp = client.post('/api/v1/places/', json=payload, headers=headers)
+    assert resp.status_code == 400
