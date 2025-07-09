@@ -26,5 +26,6 @@ def test_get_amenities(client):
         db.session.add(Amenity(name='Wifi'))
         db.session.commit()
     response = client.get('/api/v1/amenities/')
+    print("RESPONSE JSON:", response.json)
     assert response.status_code == 200
     assert b'Wifi' in response.data

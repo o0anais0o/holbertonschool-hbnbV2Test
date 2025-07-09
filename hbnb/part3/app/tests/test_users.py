@@ -20,6 +20,7 @@ def test_create_user(client):
         'email': 'john@example.com',
         'password': 'secret'
     }
-    response = client.post('/api/v1/users/', json=data)
+    response = client.post('/api/v1/users/', json=data)    
+    print("RESPONSE JSON:", response.json)
     assert response.status_code == 201
     assert b'john@example.com' in response.data

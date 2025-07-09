@@ -85,4 +85,6 @@ def test_create_place_missing_field(client):
         'amenities': []
     }
     resp = client.post('/api/v1/places/', json=payload, headers=headers)
+    print("STATUS CODE:", resp.status_code)
+    print("RESPONSE JSON:", resp.json)
     assert resp.status_code == 400

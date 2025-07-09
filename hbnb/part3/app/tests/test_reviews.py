@@ -94,4 +94,6 @@ def test_create_review_invalid_rating(client):
     }
     headers = {'Authorization': f'Bearer {token}'}
     resp = client.post('/api/v1/reviews/', json=payload, headers=headers)
+    print("STATUS CODE:", resp.status_code)
+    print("RESPONSE JSON:", resp.json)
     assert resp.status_code == 400
