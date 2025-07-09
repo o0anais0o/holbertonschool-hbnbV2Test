@@ -69,12 +69,3 @@ class UserResource(Resource):
         if not user:
             api.abort(404, 'User not found')
         return user_to_dict(user), 200
-
-    # Optionnel : suppression d’un utilisateur (admin only)
-    @jwt_required()
-    def delete(self, user_id):
-        claims = get_jwt()
-        if not claims.get('is_admin'):
-            api.abort(403, 'Admin only')
-        # Ajoute ici la méthode de suppression côté Facade si besoin
-        return {'message': 'User deleted (not implemented)'}, 200
