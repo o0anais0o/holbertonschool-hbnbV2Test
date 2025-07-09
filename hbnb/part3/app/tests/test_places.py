@@ -41,7 +41,9 @@ def get_auth_token(client):
         'email': 'alice@example.com',
         'password': 'password'
     })
-    return resp.get_json()['access_token']
+    data = resp.get_json()
+    assert data is not None, f"Pas de JSON dans la réponse login : {resp.data}"
+    return data['access_token']
 
 def test_create_place(client):
     token = get_auth_token(client)
@@ -63,13 +65,22 @@ def test_create_place(client):
     }
     headers = {'Authorization': f'Bearer {token}'}
     resp = client.post('/api/v1/places/', json=payload, headers=headers)
+    print("STATUS CODE:", resp.status_code)
+    print("RESPONSE JSON:", resp.get_json())
     assert resp.status_code == 201
     data = resp.get_json()
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data}"
     assert data['title'] == 'Super appart'
-    assert data['owner']['id'] == owner_id
+    # Selon ta réponse API, adapte cette ligne :
+    # Si tu retournes {'owner_id': ...}
+    assert data['owner_id'] == owner_id
+    # Si tu retournes {'owner': { 'id': ... }}
+    # assert data['owner']['id'] == owner_id
 
 def test_get_places(client):
     resp = client.get('/api/v1/places/')
+    print("STATUS CODE:", resp.status_code)
+    print("RESPONSE JSON:", resp.get_json())
     assert resp.status_code == 200
     # Peut être vide au début, c'est normal
 
@@ -86,5 +97,9 @@ def test_create_place_missing_field(client):
     }
     resp = client.post('/api/v1/places/', json=payload, headers=headers)
     print("STATUS CODE:", resp.status_code)
-    print("RESPONSE JSON:", resp.json)
+    print("RESPONSE JSON:", resp.get_json())
     assert resp.status_code == 400
+    data = resp.get_json()
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data}"
+    assert "error" in data
+    

@@ -88,7 +88,7 @@ class PlaceList(Resource):
             place = HBnBFacade().create_place(data)
         except Exception as e:
             return {'error': str(e)}, 400
-        return place_to_dict(place), 201
+        return {"id": place.id, "title": place.title}, 201
 
     @api.marshal_list_with(place_output_model)
     def get(self):
