@@ -13,7 +13,7 @@ class Place(BaseModel, db.Model):
     owner_id = db.Column(db.String(60), db.ForeignKey('users.id'), nullable=False)
 
     # Relations
-    reviews = db.relationship('Review', backref='place', lazy=True, cascade="all, delete-orphan")
+    reviews = db.relationship('Review', backref='place', cascade="all, delete-orphan")
     amenities = db.relationship('PlaceAmenity', back_populates='place', cascade="all, delete-orphan")
 
     @staticmethod

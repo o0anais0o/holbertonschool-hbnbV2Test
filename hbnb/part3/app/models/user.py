@@ -14,7 +14,7 @@ class User(BaseModel, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
 
     places = db.relationship('Place', backref='owner', lazy=True)
-    reviews = db.relationship('Review', backref='user', lazy=True)
+    reviews = db.relationship('Review', back_populates='user', cascade="all, delete-orphan")
 
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
