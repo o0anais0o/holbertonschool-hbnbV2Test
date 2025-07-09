@@ -15,3 +15,16 @@ config = {
     'production': ProductionConfig,
     'default': DevelopmentConfig
 }
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    WTF_CSRF_ENABLED = False
+    DEBUG = True
+
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,  # <-- ajoute cette ligne !
+    'default': DevelopmentConfig
+}
