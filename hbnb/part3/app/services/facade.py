@@ -1,16 +1,10 @@
-from app.persistence.memory_repository import MemoryRepository
+from app.extensions import db
 from app.models.user import User
 from app.models.place import Place
 from app.models.amenity import Amenity
 from app.models.review import Review
 
 class HBnBFacade:
-    def __init__(self):
-        self.user_repo = MemoryRepository()
-        self.place_repo = MemoryRepository()
-        self.amenity_repo = MemoryRepository()
-        self.review_repo = MemoryRepository()
-
     # ---------- USER ----------
     def create_user(self, data):
         User.validate_data(data)
@@ -47,6 +41,8 @@ class HBnBFacade:
             user.first_name = data['first_name']
         if 'last_name' in data:
             user.last_name = data['last_name']
+        if 'password' in data:
+            user.set_password(data['password'])
         db.session.commit()
         return user
 
@@ -78,18 +74,15 @@ class HBnBFacade:
 
     # ---------- PLACE ----------
     def create_place(self, data):
-        # Validation owner
         owner = User.query.get(data['owner_id'])
         if not owner:
             raise ValueError("Owner not found")
-        # Validation et récupération des amenities
         amenities = []
         for amenity_id in data.get('amenities', []):
             amenity = Amenity.query.get(amenity_id)
             if not amenity:
                 raise ValueError(f"Amenity not found: {amenity_id}")
             amenities.append(amenity)
-        # Création de l'objet Place
         place = Place(
             title=data['title'],
             description=data.get('description', ''),

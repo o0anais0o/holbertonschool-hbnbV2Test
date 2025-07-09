@@ -1,11 +1,12 @@
-from app import db
-from app.models.base_model import BaseModel
-from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
 import re
+from app.extensions import db
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.models.base_model import BaseModel
 
 class User(BaseModel, db.Model):
     __tablename__ = 'users'
-    id = db.Column(db.String(60), primary_key=True)
+    id = db.Column(db.String(60), primary_key=True, default=lambda: str(uuid.uuid4()))
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
