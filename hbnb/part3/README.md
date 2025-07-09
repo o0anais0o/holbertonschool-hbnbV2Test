@@ -40,7 +40,8 @@ hbnb/
 │   │       ├── users.py
 │   │       ├── places.py
 │   │       ├── reviews.py
-│   │       └── amenities.py
+│   │       ├── amenities.py
+│   │       └── auth.py         # ← endpoints REST d’authentification
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── base_model.py
@@ -51,7 +52,7 @@ hbnb/
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── facade.py
-│   │   └── auth.py
+│   │   └── auth.py             # ← logique métier d’authentification
 │   ├── persistence/
 │   │   ├── __init__.py
 │   │   ├── repository.py
