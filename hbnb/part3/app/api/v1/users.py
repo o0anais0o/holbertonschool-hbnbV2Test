@@ -8,7 +8,7 @@ user_model = api.model('User', {
     'first_name': fields.String(required=True),
     'last_name': fields.String(required=True),
     'email': fields.String(required=True),
-    'password': fields.String(required=True)
+    'password': fields.String(required=True, description="Password (only for creation)")
 })
 
 user_output_model = api.model('UserOut', {
@@ -36,16 +36,15 @@ class UserList(Resource):
         try:
             user = HBnBFacade().create_user(data)
         except Exception as e:
-            return {'error': str(e)}, 400
+            api.abort(400, str(e))
         return user_to_dict(user), 201
 
     @jwt_required()
     @api.marshal_list_with(user_output_model)
     def get(self):
-        # Only admin can list all users
         claims = get_jwt()
         if not claims.get('is_admin'):
-            return {'error': 'Admin only'}, 403
+            api.abort(403, 'Admin only')
         users = HBnBFacade().get_all_users()
         return [user_to_dict(u) for u in users], 200
 
@@ -56,7 +55,7 @@ class UserResource(Resource):
     def get(self, user_id):
         user = HBnBFacade().get_user(user_id)
         if not user:
-            return {'error': 'User not found'}, 404
+            api.abort(404, 'User not found')
         return user_to_dict(user), 200
 
     @jwt_required()
@@ -66,7 +65,16 @@ class UserResource(Resource):
         try:
             user = HBnBFacade().update_user(user_id, data)
         except Exception as e:
-            return {'error': str(e)}, 400
+            api.abort(400, str(e))
         if not user:
-            return {'error': 'User not found'}, 404
+            api.abort(404, 'User not found')
         return user_to_dict(user), 200
+
+    # Optionnel : suppression d’un utilisateur (admin only)
+    @jwt_required()
+    def delete(self, user_id):
+        claims = get_jwt()
+        if not claims.get('is_admin'):
+            api.abort(403, 'Admin only')
+        # Ajoute ici la méthode de suppression côté Facade si besoin
+        return {'message': 'User deleted (not implemented)'}, 200
