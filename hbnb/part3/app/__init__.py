@@ -7,25 +7,26 @@ db = SQLAlchemy()
 jwt = JWTManager()
 
 def create_app(config_name='default'):
-    from config import config
+    from config import config  # Ton fichier config.py
+    from app.api.v1 import register_namespaces
+
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    # Initialisation des extensions
     db.init_app(app)
     jwt.init_app(app)
 
-    api = Api(app, version='1.0', title='HBNB API', description='HBnB Application API', doc='/api/v1/')
+    # Création de l'API RESTx (doc sur /api/v1/)
+    api = Api(
+        app,
+        version='1.0',
+        title='HBNB API',
+        description='API HBNB',
+        doc='/api/v1/'
+    )
 
-    # Import des namespaces
-    from app.api.v1.users import api as users_ns
-    from app.api.v1.places import api as places_ns
-    from app.api.v1.reviews import api as reviews_ns
-    from app.api.v1.amenities import api as amenities_ns
-    from app.services.auth import api as auth_ns
-
-    api.add_namespace(users_ns, path='/api/v1/users')
-    api.add_namespace(places_ns, path='/api/v1/places')
-    api.add_namespace(reviews_ns, path='/api/v1/reviews')
-    api.add_namespace(amenities_ns, path='/api/v1/amenities')
-    api.add_namespace(auth_ns, path='/api/v1/auth')
+    # Enregistrement des namespaces de l’API v1
+    register_namespaces(api)
 
     return app
