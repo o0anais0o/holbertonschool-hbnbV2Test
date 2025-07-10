@@ -144,7 +144,11 @@ class HBnBFacade:
 
     # ---------- REVIEW ----------
     def create_review(self, data):
-        user = User.query.get(data['user_id'])
+        # user = User.query.get(data['user_id']) #
+        user_id = data['user_id']
+        place_id = data['place_id']
+        user = db.session.get(User, user_id)
+        place = db.session.get(Place, place_id)
         if not user:
             raise ValueError("User not found")
         place = Place.query.get(data['place_id'])
