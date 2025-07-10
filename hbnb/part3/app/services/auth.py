@@ -11,11 +11,19 @@ login_model = api.model('Login', {
 })
 
 def login_user(email, password):
-    # Ici, ta logique pour vérifier l'utilisateur et retourner un token
-    # Pour le test, tu peux juste retourner une chaîne bidon
-    if email == "test@example.com" and password == "test":
-        return "fake-jwt-token"
-    return None
+    facade = HBnBFacade()
+    user = facade.get_user_by_email(email)
+    if not user:
+        return None
+    if hasattr(user, "check_password"):
+        if not user.check_password(password):
+            return None
+    else:
+        if not check_password_hash(user.password_hash, password):
+            return None
+    claims = {'is_admin': getattr(user, 'is_admin', False)}
+    token = create_access_token(identity=user.id, additional_claims=claims)
+    return token
 
 @api.route('/login')
 class Login(Resource):
