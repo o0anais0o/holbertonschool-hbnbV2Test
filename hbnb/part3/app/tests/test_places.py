@@ -25,7 +25,6 @@ def client():
             db.drop_all()
 
 def get_auth_token(client):
-    # Création explicite de l'utilisateur via l'API pour s'assurer qu'il existe côté API
     resp = client.post('/api/v1/users/', json={
         'first_name': 'Alice',
         'last_name': 'Doe',
@@ -34,18 +33,13 @@ def get_auth_token(client):
     })
     print("USER CREATION STATUS:", resp.status_code)
     print("USER CREATION RESPONSE:", resp.get_json())
-    assert resp.status_code in (200, 201, 409), f"Erreur création user : {resp.data!r}"
+    assert resp.status_code in (200, 201), f"Erreur création user : {resp.data!r}"
 
     resp = client.post('/api/v1/auth/login', json={
         'email': 'alice@example.com',
         'password': 'password'
     })
-    try:
-        data = resp.get_json()
-    except Exception:
-        data = None
     print("LOGIN STATUS:", resp.status_code)
-    print("LOGIN RESPONSE:", data)
     print("LOGIN RESPONSE:", resp.get_json())
     data = resp.get_json()
     assert data is not None, f"Pas de JSON dans la réponse login : {resp.data!r} (status {resp.status_code})"
