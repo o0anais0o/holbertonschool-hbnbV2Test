@@ -1,6 +1,3 @@
-# Fichier : app/api/v1/places.py
-# Remplace tout le contenu du fichier par ce code.
-
 from flask_restx import Namespace, Resource, fields
 from app.services.facade import HBnBFacade
 from flask_jwt_extended import jwt_required

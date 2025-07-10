@@ -1,4 +1,8 @@
 from app.extensions import db
+from app.repositories.user_repository import UserRepository
+from app.repositories.place_repository import PlaceRepository
+from app.repositories.amenity_repository import AmenityRepository
+from app.repositories.review_repository import ReviewRepository
 from app.models.user import User
 from app.models.place import Place, PlaceAmenity
 from app.models.amenity import Amenity

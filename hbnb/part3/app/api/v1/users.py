@@ -28,7 +28,18 @@ def user_to_dict(user):
 
 @api.route('/')
 class UserList(Resource):
+    @api.marshal_list_with(user_model)
+    def get(self):
+        users = HBnBFacade().get_all_users()
+        return users
     @api.expect(user_model, validate=True)
+    def post(self):
+        data = api.payload
+        try:
+            user = HBnBFacade().create_user(data)
+            return user, 201
+        except Exception as e:
+            return {'error': str(e)}, 400
     @api.response(201, 'User created')
     @api.response(400, 'Invalid input')
     @api.marshal_with(user_output_model, code=201)
