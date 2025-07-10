@@ -13,12 +13,23 @@ def create_app(config_name='default'):
     db.init_app(app)
     jwt.init_app(app)
 
+    authorizations = {
+        'Bearer Auth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': "JWT Authorization header using the Bearer scheme. Example: 'Authorization: Bearer {token}'"
+        }
+    }
+
     api = Api(
         app,
         version='1.0',
         title='HBNB API',
         description='API HBNB',
-        doc='/api/v1/'
+        doc='/api/v1/',
+        authorizations=authorizations,
+        security='Bearer Auth'
     )
 
     # Import et ajout des namespaces Flask-RESTX
