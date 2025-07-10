@@ -8,7 +8,6 @@ from werkzeug.security import generate_password_hash
 class HBnBFacade:
     # ---------- USER ----------
     def create_user(self, data):
-        # Validation des données (si tu as une méthode statique validate_data)
         if hasattr(User, "validate_data"):
             User.validate_data(data)
         if User.query.filter_by(email=data['email']).first():
@@ -18,7 +17,6 @@ class HBnBFacade:
             last_name=data['last_name'],
             email=data['email']
         )
-        # Hash du mot de passe
         if hasattr(user, "set_password"):
             user.set_password(data['password'])
         else:
@@ -28,7 +26,7 @@ class HBnBFacade:
         return user
 
     def get_user(self, user_id):
-        return User.query.get(user_id)
+        return db.session.get(User, user_id)
 
     def get_user_by_email(self, email):
         return User.query.filter_by(email=email).first()
@@ -66,7 +64,7 @@ class HBnBFacade:
         return amenity
 
     def get_amenity(self, amenity_id):
-        return Amenity.query.get(amenity_id)
+        return db.session.get(Amenity, amenity_id)
 
     def get_all_amenities(self):
         return Amenity.query.all()
@@ -84,12 +82,12 @@ class HBnBFacade:
 
     # ---------- PLACE ----------
     def create_place(self, data):
-        owner = User.query.get(data['owner_id'])
+        owner = db.session.get(User, data['owner_id'])
         if not owner:
             raise ValueError("Owner not found")
         amenities = []
         for amenity_id in data.get('amenities', []):
-            amenity = Amenity.query.get(amenity_id)
+            amenity = db.session.get(Amenity, amenity_id)
             if not amenity:
                 raise ValueError(f"Amenity not found: {amenity_id}")
             amenities.append(amenity)
@@ -104,7 +102,6 @@ class HBnBFacade:
         db.session.add(place)
         db.session.flush()  # Pour obtenir l'ID du place
 
-        # Ajout des amenities via la table d'association
         for amenity in amenities:
             pa = PlaceAmenity(place_id=place.id, amenity_id=amenity.id)
             db.session.add(pa)
@@ -112,7 +109,7 @@ class HBnBFacade:
         return place
 
     def get_place(self, place_id):
-        return Place.query.get(place_id)
+        return db.session.get(Place, place_id)
 
     def get_all_places(self):
         return Place.query.all()
@@ -126,15 +123,14 @@ class HBnBFacade:
             if key in data:
                 setattr(place, key, data[key])
         if 'owner_id' in data:
-            owner = User.query.get(data['owner_id'])
+            owner = db.session.get(User, data['owner_id'])
             if not owner:
                 raise ValueError("Owner not found")
             place.owner_id = owner.id
         if 'amenities' in data:
-            # Supprimer les anciens liens
             PlaceAmenity.query.filter_by(place_id=place.id).delete()
             for amenity_id in data['amenities']:
-                amenity = Amenity.query.get(amenity_id)
+                amenity = db.session.get(Amenity, amenity_id)
                 if not amenity:
                     raise ValueError(f"Amenity not found: {amenity_id}")
                 pa = PlaceAmenity(place_id=place.id, amenity_id=amenity.id)
@@ -144,14 +140,12 @@ class HBnBFacade:
 
     # ---------- REVIEW ----------
     def create_review(self, data):
-        # user = User.query.get(data['user_id']) #
         user_id = data['user_id']
         place_id = data['place_id']
         user = db.session.get(User, user_id)
         place = db.session.get(Place, place_id)
         if not user:
             raise ValueError("User not found")
-        place = Place.query.get(data['place_id'])
         if not place:
             raise ValueError("Place not found")
         rating = data['rating']
@@ -168,13 +162,13 @@ class HBnBFacade:
         return review
 
     def get_review(self, review_id):
-        return Review.query.get(review_id)
+        return db.session.get(Review, review_id)
 
     def get_all_reviews(self):
         return Review.query.all()
 
     def get_reviews_by_place(self, place_id):
-        place = Place.query.get(place_id)
+        place = db.session.get(Place, place_id)
         if not place:
             return None
         return place.reviews
