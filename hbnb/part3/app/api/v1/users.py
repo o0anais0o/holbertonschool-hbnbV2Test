@@ -20,7 +20,7 @@ user_output_model = api.model('UserOut', {
 
 def user_to_dict(user):
     return {
-        'id': user.id,
+        'id': str(user.id),
         'first_name': user.first_name,
         'last_name': user.last_name,
         'email': user.email
@@ -31,13 +31,14 @@ class UserList(Resource):
     @api.expect(user_model, validate=True)
     @api.response(201, 'User created')
     @api.response(400, 'Invalid input')
+    @api.marshal_with(user_output_model, code=201)
     def post(self):
         data = api.payload
         try:
             user = HBnBFacade().create_user(data)
+            return user_to_dict(user), 201
         except Exception as e:
             api.abort(400, str(e))
-        return user_to_dict(user), 201
 
     @jwt_required()
     @api.marshal_list_with(user_output_model)
@@ -48,7 +49,8 @@ class UserList(Resource):
         users = HBnBFacade().get_all_users()
         return [user_to_dict(u) for u in users], 200
 
-@api.route('/<user_id>')
+@api.route('/<string:user_id>')
+@api.param('user_id', 'The user identifier')
 class UserResource(Resource):
     @jwt_required()
     @api.marshal_with(user_output_model)
@@ -60,12 +62,13 @@ class UserResource(Resource):
 
     @jwt_required()
     @api.expect(user_model, validate=True)
+    @api.marshal_with(user_output_model)
     def put(self, user_id):
         data = api.payload
         try:
             user = HBnBFacade().update_user(user_id, data)
+            if not user:
+                api.abort(404, 'User not found')
+            return user_to_dict(user), 200
         except Exception as e:
             api.abort(400, str(e))
-        if not user:
-            api.abort(404, 'User not found')
-        return user_to_dict(user), 200

@@ -41,8 +41,12 @@ def get_auth_token(client):
         'email': 'alice@example.com',
         'password': 'password'
     })
-    data = resp.get_json()
-    assert data is not None, f"Pas de JSON dans la réponse login : {resp.data}"
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse login : {resp.data!r} (status {resp.status_code})"
+    assert 'access_token' in data, f"Pas de access_token dans la réponse login : {data}"
     return data['access_token']
 
 def test_create_place(client):
@@ -67,22 +71,27 @@ def test_create_place(client):
     resp = client.post('/api/v1/places/', json=payload, headers=headers)
     print("STATUS CODE:", resp.status_code)
     print("RESPONSE JSON:", resp.get_json())
-    assert resp.status_code == 201
-    data = resp.get_json()
-    assert data is not None, f"Pas de JSON dans la réponse : {resp.data}"
-    assert data['title'] == 'Super appart'
+    assert resp.status_code == 201, f"Attendu 201, reçu {resp.status_code} : {resp.data!r}"
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
+    assert data.get('title') == 'Super appart'
     # Selon ta réponse API, adapte cette ligne :
-    # Si tu retournes {'owner_id': ...}
-    assert data['owner_id'] == owner_id
-    # Si tu retournes {'owner': { 'id': ... }}
-    # assert data['owner']['id'] == owner_id
+    assert data.get('owner_id') == owner_id
 
 def test_get_places(client):
     resp = client.get('/api/v1/places/')
     print("STATUS CODE:", resp.status_code)
     print("RESPONSE JSON:", resp.get_json())
-    assert resp.status_code == 200
+    assert resp.status_code == 200, f"Attendu 200, reçu {resp.status_code} : {resp.data!r}"
     # Peut être vide au début, c'est normal
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
 
 def test_create_place_missing_field(client):
     token = get_auth_token(client)
@@ -98,8 +107,10 @@ def test_create_place_missing_field(client):
     resp = client.post('/api/v1/places/', json=payload, headers=headers)
     print("STATUS CODE:", resp.status_code)
     print("RESPONSE JSON:", resp.get_json())
-    assert resp.status_code == 400
-    data = resp.get_json()
-    assert data is not None, f"Pas de JSON dans la réponse : {resp.data}"
-    assert "error" in data
-    
+    assert resp.status_code == 400, f"Attendu 400, reçu {resp.status_code} : {resp.data!r}"
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
+    assert "error" in data, f"Pas de clé 'error' dans la réponse : {data}"

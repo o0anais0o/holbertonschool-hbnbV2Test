@@ -41,6 +41,7 @@ def client():
             db.drop_all()
 
 def get_auth_token(client):
+    # Création de l'utilisateur (si déjà existant, ce n'est pas grave)
     client.post('/api/v1/users/', json={
         'first_name': 'Bob',
         'last_name': 'Smith',
@@ -51,7 +52,13 @@ def get_auth_token(client):
         'email': 'bob@example.com',
         'password': 'password'
     })
-    return resp.get_json()['access_token']
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse login : {resp.data!r} (status {resp.status_code})"
+    assert 'access_token' in data, f"Pas de access_token dans la réponse login : {data}"
+    return data['access_token']
 
 def test_create_review(client):
     token = get_auth_token(client)
@@ -69,14 +76,27 @@ def test_create_review(client):
     }
     headers = {'Authorization': f'Bearer {token}'}
     resp = client.post('/api/v1/reviews/', json=payload, headers=headers)
-    assert resp.status_code == 201
-    data = resp.get_json()
-    assert data['text'] == 'Super séjour !'
-    assert data['user_id'] == user_id
+    print("STATUS CODE:", resp.status_code)
+    print("RESPONSE JSON:", resp.get_json())
+    assert resp.status_code == 201, f"Attendu 201, reçu {resp.status_code} : {resp.data!r}"
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
+    assert data.get('text') == 'Super séjour !'
+    assert data.get('user_id') == user_id
 
 def test_get_reviews(client):
     resp = client.get('/api/v1/reviews/')
-    assert resp.status_code == 200
+    print("STATUS CODE:", resp.status_code)
+    print("RESPONSE JSON:", resp.get_json())
+    assert resp.status_code == 200, f"Attendu 200, reçu {resp.status_code} : {resp.data!r}"
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
 
 def test_create_review_invalid_rating(client):
     token = get_auth_token(client)
@@ -95,5 +115,11 @@ def test_create_review_invalid_rating(client):
     headers = {'Authorization': f'Bearer {token}'}
     resp = client.post('/api/v1/reviews/', json=payload, headers=headers)
     print("STATUS CODE:", resp.status_code)
-    print("RESPONSE DATA:", resp.get_json())
-    assert resp.status_code == 400
+    print("RESPONSE JSON:", resp.get_json())
+    assert resp.status_code == 400, f"Attendu 400, reçu {resp.status_code} : {resp.data!r}"
+    try:
+        data = resp.get_json()
+    except Exception:
+        data = None
+    assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
+    assert "error" in data, f"Pas de clé 'error' dans la réponse : {data}"
