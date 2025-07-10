@@ -55,7 +55,6 @@ hbnb/
 │   │   ├── memory_repository.py
 │   │   └── sqlalchemy_repository.py
 │   ├── repositories/
-│   │   ├── __init__.py
 │   │   ├── user_repository.py
 │   │   ├── place_repository.py
 │   │   ├── amenity_repository.py
@@ -66,13 +65,16 @@ hbnb/
 │   │   └── auth.py 
 │   ├── tests/
 │       ├── __init__.py
-│       ├── test_user.py
-│       ├── test_place.py
-│       ├── test_amenity.py
-│       └── test_review.py
+│       ├── test_users.py
+│       ├── test_places.py
+│       ├── test_amenities.py
+│       └── test_reviews.py
 ├── run.py
 ├── config.py
 ├── requirements.txt
+├── extensions.py
+├── erDiagram.mmd
+├── init_admin.py
 ├── README.md
 ```
 
