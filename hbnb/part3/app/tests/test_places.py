@@ -16,7 +16,7 @@ def client():
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
-            # Création d'un user pour owner
+            # Création d'un user pour owner (sert à la cohérence de la DB)
             user = User(first_name='Alice', last_name='Doe', email='alice@example.com')
             user.set_password('password')
             db.session.add(user)
@@ -30,13 +30,17 @@ def client():
             db.drop_all()
 
 def get_auth_token(client):
-    # Crée l'utilisateur s'il n'existe pas déjà
-    client.post('/api/v1/users/', json={
+    # Création explicite de l'utilisateur via l'API pour s'assurer qu'il existe côté API
+    resp = client.post('/api/v1/users/', json={
         'first_name': 'Alice',
         'last_name': 'Doe',
         'email': 'alice@example.com',
         'password': 'password'
     })
+    print("USER CREATION STATUS:", resp.status_code)
+    print("USER CREATION RESPONSE:", resp.get_json())
+    assert resp.status_code in (200, 201, 409), f"Erreur création user : {resp.data!r}"
+
     resp = client.post('/api/v1/auth/login', json={
         'email': 'alice@example.com',
         'password': 'password'
@@ -45,6 +49,8 @@ def get_auth_token(client):
         data = resp.get_json()
     except Exception:
         data = None
+    print("LOGIN STATUS:", resp.status_code)
+    print("LOGIN RESPONSE:", data)
     assert data is not None, f"Pas de JSON dans la réponse login : {resp.data!r} (status {resp.status_code})"
     assert 'access_token' in data, f"Pas de access_token dans la réponse login : {data}"
     return data['access_token']
@@ -78,7 +84,6 @@ def test_create_place(client):
         data = None
     assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
     assert data.get('title') == 'Super appart'
-    # Selon ta réponse API, adapte cette ligne :
     assert data.get('owner_id') == owner_id
 
 def test_get_places(client):
@@ -86,7 +91,6 @@ def test_get_places(client):
     print("STATUS CODE:", resp.status_code)
     print("RESPONSE JSON:", resp.get_json())
     assert resp.status_code == 200, f"Attendu 200, reçu {resp.status_code} : {resp.data!r}"
-    # Peut être vide au début, c'est normal
     try:
         data = resp.get_json()
     except Exception:

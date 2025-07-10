@@ -1,13 +1,16 @@
 from app.extensions import db
 from app.models.user import User
-from app.models.place import Place
+from app.models.place import Place, PlaceAmenity
 from app.models.amenity import Amenity
 from app.models.review import Review
+from werkzeug.security import generate_password_hash
 
 class HBnBFacade:
     # ---------- USER ----------
     def create_user(self, data):
-        User.validate_data(data)
+        # Validation des données (si tu as une méthode statique validate_data)
+        if hasattr(User, "validate_data"):
+            User.validate_data(data)
         if User.query.filter_by(email=data['email']).first():
             raise ValueError("Email already registered")
         user = User(
@@ -15,7 +18,11 @@ class HBnBFacade:
             last_name=data['last_name'],
             email=data['email']
         )
-        user.set_password(data['password'])
+        # Hash du mot de passe
+        if hasattr(user, "set_password"):
+            user.set_password(data['password'])
+        else:
+            user.password_hash = generate_password_hash(data['password'])
         db.session.add(user)
         db.session.commit()
         return user
@@ -42,7 +49,10 @@ class HBnBFacade:
         if 'last_name' in data:
             user.last_name = data['last_name']
         if 'password' in data:
-            user.set_password(data['password'])
+            if hasattr(user, "set_password"):
+                user.set_password(data['password'])
+            else:
+                user.password_hash = generate_password_hash(data['password'])
         db.session.commit()
         return user
 
@@ -92,9 +102,9 @@ class HBnBFacade:
             owner=owner
         )
         db.session.add(place)
-        db.session.flush()  # Pour avoir l'ID du place
+        db.session.flush()  # Pour obtenir l'ID du place
 
-        # Ajout des amenities (table d'association)
+        # Ajout des amenities via la table d'association
         for amenity in amenities:
             pa = PlaceAmenity(place_id=place.id, amenity_id=amenity.id)
             db.session.add(pa)

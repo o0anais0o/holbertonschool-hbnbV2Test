@@ -115,3 +115,23 @@ class PlaceResource(Resource):
         if not place:
             return {'error': 'Place not found'}, 404
         return place_to_dict(place), 200
+
+def get_auth_token(client):
+    resp = client.post('/api/v1/users/', json={
+        'first_name': 'Alice',
+        'last_name': 'Doe',
+        'email': 'alice@example.com',
+        'password': 'password'
+    })
+    print("USER CREATION:", resp.status_code, resp.get_json())
+    assert resp.status_code in (200, 201, 409), f"Erreur création user : {resp.data!r}"
+
+    resp = client.post('/api/v1/auth/login', json={
+        'email': 'alice@example.com',
+        'password': 'password'
+    })
+    data = resp.get_json()
+    print("LOGIN:", resp.status_code, data)
+    assert data is not None, f"Pas de JSON dans la réponse login : {resp.data!r} (status {resp.status_code})"
+    assert 'access_token' in data, f"Pas de access_token dans la réponse login : {data}"
+    return data['access_token']
