@@ -17,11 +17,26 @@ def client():
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
-            # Création d'une amenity et d'un place seulement
+            # Création d'une amenity
             amenity = Amenity(name='Wifi')
             db.session.add(amenity)
             db.session.commit()
-            # Le place sera associé à l'utilisateur créé via l'API dans get_auth_token
+            # Création d'un utilisateur pour owner
+            user = User(first_name='Bob', last_name='Smith', email='bob@example.com')
+            user.set_password('password')
+            db.session.add(user)
+            db.session.commit()
+            # Création d'un place
+            place = Place(
+                title="Test Place",
+                description="Test desc",
+                price=100.0,
+                latitude=0.0,
+                longitude=0.0,
+                owner_id=user.id
+            )
+            db.session.add(place)
+            db.session.commit()
         yield client
         with app.app_context():
             db.drop_all()

@@ -1,3 +1,6 @@
+# Fichier : app/api/v1/places.py
+# Remplace tout le contenu du fichier par ce code.
+
 from flask_restx import Namespace, Resource, fields
 from app.services.facade import HBnBFacade
 from flask_jwt_extended import jwt_required
@@ -40,6 +43,7 @@ place_output_model = api.model('PlaceOut', {
     'price': fields.Float(),
     'latitude': fields.Float(),
     'longitude': fields.Float(),
+    'owner_id': fields.String(),  # <-- Ajout explicite pour les tests
     'owner': fields.Nested(user_model),
     'amenities': fields.List(fields.Nested(amenity_model)),
     'reviews': fields.List(fields.Nested(review_model))
@@ -47,33 +51,47 @@ place_output_model = api.model('PlaceOut', {
 
 def place_to_dict(place, details=True):
     data = {
-        'id': place.id,
+        'id': str(place.id),
         'title': place.title,
         'description': place.description,
         'price': place.price,
         'latitude': place.latitude,
         'longitude': place.longitude,
+        'owner_id': str(place.owner_id),  # <-- Ajout explicite pour les tests
     }
     if details:
-        data['owner'] = {
-            'id': place.owner.id,
-            'first_name': place.owner.first_name,
-            'last_name': place.owner.last_name,
-            'email': place.owner.email
-        }
-        data['amenities'] = [
-            {'id': pa.amenity.id, 'name': pa.amenity.name}
-            for pa in place.amenities
-        ]
-        data['reviews'] = [
-            {
-                'id': r.id,
-                'text': r.text,
-                'rating': r.rating,
-                'user_id': r.user_id
+        # Owner (si chargé)
+        if hasattr(place, 'owner') and place.owner:
+            data['owner'] = {
+                'id': str(place.owner.id),
+                'first_name': place.owner.first_name,
+                'last_name': place.owner.last_name,
+                'email': place.owner.email
             }
-            for r in place.reviews
-        ]
+        else:
+            data['owner'] = None
+        # Amenities (via table d'association)
+        if hasattr(place, 'amenities'):
+            data['amenities'] = [
+                {'id': str(pa.amenity.id), 'name': pa.amenity.name}
+                for pa in getattr(place, 'amenities', [])
+                if hasattr(pa, 'amenity') and pa.amenity
+            ]
+        else:
+            data['amenities'] = []
+        # Reviews
+        if hasattr(place, 'reviews'):
+            data['reviews'] = [
+                {
+                    'id': str(r.id),
+                    'text': r.text,
+                    'rating': r.rating,
+                    'user_id': str(r.user_id)
+                }
+                for r in place.reviews
+            ]
+        else:
+            data['reviews'] = []
     return data
 
 @api.route('/')
@@ -88,7 +106,8 @@ class PlaceList(Resource):
             place = HBnBFacade().create_place(data)
         except Exception as e:
             return {'error': str(e)}, 400
-        return {"id": place.id, "title": place.title}, 201
+        # Retourne tous les champs attendus par les tests
+        return place_to_dict(place, details=False), 201
 
     @api.marshal_list_with(place_output_model)
     def get(self):
@@ -115,23 +134,3 @@ class PlaceResource(Resource):
         if not place:
             return {'error': 'Place not found'}, 404
         return place_to_dict(place), 200
-
-def get_auth_token(client):
-    resp = client.post('/api/v1/users/', json={
-        'first_name': 'Alice',
-        'last_name': 'Doe',
-        'email': 'alice@example.com',
-        'password': 'password'
-    })
-    print("USER CREATION:", resp.status_code, resp.get_json())
-    assert resp.status_code in (200, 201, 409), f"Erreur création user : {resp.data!r}"
-
-    resp = client.post('/api/v1/auth/login', json={
-        'email': 'alice@example.com',
-        'password': 'password'
-    })
-    data = resp.get_json()
-    print("LOGIN:", resp.status_code, data)
-    assert data is not None, f"Pas de JSON dans la réponse login : {resp.data!r} (status {resp.status_code})"
-    assert 'access_token' in data, f"Pas de access_token dans la réponse login : {data}"
-    return data['access_token']

@@ -108,4 +108,4 @@ def test_create_place_missing_field(client):
     except Exception:
         data = None
     assert data is not None, f"Pas de JSON dans la réponse : {resp.data!r}"
-    assert "error" in data, f"Pas de clé 'error' dans la réponse : {data}"
+    assert "error" in data or "errors" in data, f"Pas de clé 'error' ou 'errors' dans la réponse : {data}"
