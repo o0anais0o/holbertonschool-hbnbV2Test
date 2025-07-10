@@ -16,12 +16,7 @@ def client():
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
-            # Création d'un user pour owner (sert à la cohérence de la DB)
-            user = User(first_name='Alice', last_name='Doe', email='alice@example.com')
-            user.set_password('password')
-            db.session.add(user)
-            db.session.commit()
-            # Création d'une amenity
+            # Création d'une amenity seulement
             amenity = Amenity(name='Wifi')
             db.session.add(amenity)
             db.session.commit()
