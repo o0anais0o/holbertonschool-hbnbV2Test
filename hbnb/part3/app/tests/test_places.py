@@ -46,6 +46,8 @@ def get_auth_token(client):
         data = None
     print("LOGIN STATUS:", resp.status_code)
     print("LOGIN RESPONSE:", data)
+    print("LOGIN RESPONSE:", resp.get_json())
+    data = resp.get_json()
     assert data is not None, f"Pas de JSON dans la réponse login : {resp.data!r} (status {resp.status_code})"
     assert 'access_token' in data, f"Pas de access_token dans la réponse login : {data}"
     return data['access_token']
