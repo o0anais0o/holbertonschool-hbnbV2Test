@@ -4,6 +4,8 @@ from app.models.user import User
 
 app = create_app()
 with app.app_context():
+    db.create_all()
+
     # Vérifie si un admin existe déjà
     admin = User.query.filter_by(email="admin@example.com").first()
     if not admin:
