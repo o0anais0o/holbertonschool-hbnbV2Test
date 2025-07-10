@@ -41,7 +41,7 @@ hbnb/
 │   │       ├── places.py
 │   │       ├── reviews.py
 │   │       ├── amenities.py
-│   │       └── auth.py         # ← endpoints REST d’authentification
+│   │       └── auth.py
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── base_model.py
@@ -49,15 +49,27 @@ hbnb/
 │   │   ├── place.py
 │   │   ├── review.py
 │   │   └── amenity.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── facade.py
-│   │   └── auth.py             # ← logique métier d’authentification
 │   ├── persistence/
 │   │   ├── __init__.py
 │   │   ├── repository.py
 │   │   ├── memory_repository.py
 │   │   └── sqlalchemy_repository.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   ├── user_repository.py
+│   │   ├── place_repository.py
+│   │   ├── amenity_repository.py
+│   │   └── review_repository.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── facade.py
+│   │   └── auth.py 
+│   ├── tests/
+│       ├── __init__.py
+│       ├── test_user.py
+│       ├── test_place.py
+│       ├── test_amenity.py
+│       └── test_review.py
 ├── run.py
 ├── config.py
 ├── requirements.txt
